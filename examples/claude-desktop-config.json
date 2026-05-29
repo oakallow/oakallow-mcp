@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "oakallow": {
+      "type": "streamable-http",
+      "url": "https://api.oakallow.io/mcp"
+    }
+  }
+}
