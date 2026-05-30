@@ -44,6 +44,25 @@ conservative, fail-closed defaults) so the eventual call is governed and the own
 triage it from the dashboard. A `requires_approval` verdict also creates an approval
 request. This is intentional: an unknown tool is never silently trusted.
 
+## Resources
+
+oakallow exposes two read-only MCP resources. They are preflight signals an agent (or a
+client UI) can read before committing to route an action through oakallow. Both require
+the `mcp:read` scope, neither is a tool call, and neither is billed.
+
+| Resource | Returns | Reads only |
+|----------|---------|:---:|
+| `oakallow://status` | Liveness of the connector for the signed-in session: status, endpoint, server version, protocol version, and the granted scopes. A successful read is itself the proof the session is valid. No account identity or PII is returned. | yes |
+| `oakallow://credits` | Whether a governed call would currently be funded for the org this session resolves to, so an agent can fail fast before requesting an approval that could not be paid for. | yes |
+
+`oakallow://credits` is scoped to the caller's own billing org and resolves it the same
+way a real tool call does, so a `can_fund: true` result genuinely means the eventual
+approval will be funded (including team-pool fallback). It returns only a `can_fund`
+boolean and the org's name and external id. It deliberately discloses no balance figures:
+dollar amounts are surfaced only to the team owner in the dashboard, never over the
+connector. If the session resolves to no org, or to more than one, it returns
+`can_fund: false` with a reason rather than guessing which org would be billed.
+
 ## Connecting
 
 Add `https://api.oakallow.io/mcp` as a custom connector in your MCP client (Claude,
