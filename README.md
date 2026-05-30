@@ -7,7 +7,7 @@ Runtime permission, approval, and audit governance for AI agent tool execution.
 Oakallow is a hosted remote MCP server. It sits between an agent and the actions it
 wants to take, so that a specific action can be checked, gated behind human approval when
 it is risky, authorized with a single-use signed token, and recorded in an immutable audit
-log — at the moment of execution.
+log, at the moment of execution.
 
 - **Website:** https://oakallow.com
 - **MCP endpoint:** `https://api.oakallow.io/mcp` (Streamable HTTP)
@@ -42,7 +42,7 @@ The connector is a **requester and pass-through**, not a decider:
 side effect by design: Oakallow auto-creates a gated draft entry for that tool (with
 conservative, fail-closed defaults) so the eventual call is governed and the owner can
 triage it from the dashboard. A `requires_approval` verdict also creates an approval
-request. This is intentional — an unknown tool is never silently trusted.
+request. This is intentional: an unknown tool is never silently trusted.
 
 ## Connecting
 
@@ -50,10 +50,17 @@ Add `https://api.oakallow.io/mcp` as a custom connector in your MCP client (Clau
 Claude Desktop, Cowork, ChatGPT, or any Streamable HTTP MCP host). You will be redirected
 to sign in to Oakallow and approve the requested scopes:
 
-- `mcp:read` — list tools, view pending approvals, check permissions, read activity.
-- `mcp:write` — create approval requests and mint run tokens.
+- `mcp:read`: list tools, view pending approvals, check permissions, read activity.
+- `mcp:write`: create approval requests and mint run tokens.
 
 See `examples/` for a Claude Desktop config and an OAuth flow walkthrough.
+
+## Skill
+
+[`SKILL.md`](./SKILL.md) is an agent skill that documents when and how to use the
+oakallow tools: the request, approve, poll, and act workflow, how to phrase
+approval reasons, and what to do on `allowed`, `requires_approval`, or `blocked`
+verdicts. Point your agent at it to govern tool actions correctly.
 
 ## How a governed call works
 

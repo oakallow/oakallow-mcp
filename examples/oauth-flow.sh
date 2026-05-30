@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# Oakallow MCP — OAuth 2.1 flow walkthrough (illustrative)
+# Oakallow MCP OAuth 2.1 flow walkthrough (illustrative)
 #
 # This shows the discovery + authorization-code-with-PKCE shape that an MCP client
-# performs for you automatically. You normally never run this by hand — your MCP host
+# performs for you automatically. You normally never run this by hand; your MCP host
 # (Claude, Cowork, ChatGPT) does it. It is here so you can see what happens under the hood
 # and verify the endpoints.
 #
