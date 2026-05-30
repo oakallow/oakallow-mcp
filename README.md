@@ -1,5 +1,7 @@
 # Oakallow MCP Server
 
+[![MCP Badge](https://lobehub.com/badge/mcp/oakallow-oakallow-mcp)](https://lobehub.com/mcp/oakallow-oakallow-mcp)
+
 Runtime permission, approval, and audit governance for AI agent tool execution.
 
 Oakallow is a hosted remote MCP server. It sits between an agent and the actions it
