@@ -82,6 +82,14 @@ oakallow tools: the request, approve, poll, and act workflow, how to phrase
 approval reasons, and what to do on `allowed`, `requires_approval`, or `blocked`
 verdicts. Point your agent at it to govern tool actions correctly.
 
+## Trigger prompts
+
+[`PROMPT.md`](./PROMPT.md) has short, copy-paste one-liners to drop into your
+agent's system prompt so it actually consults the skill. The skill is the
+procedure; a trigger prompt is what makes the agent look. Three options, from
+"gate every tool call" to "gate a customer-named set," plus an inline example
+pattern for a real request.
+
 ## How a governed call works
 
 1. The agent calls Oakallow with its credential.
