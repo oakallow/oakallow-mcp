@@ -67,10 +67,29 @@ decision through the connector.
 
 | Tool | Purpose | Reads only |
 |------|---------|:---:|
-| `list_my_tools` | Enumerate the tools available to the signed-in user in their org | yes |
+| `list_my_tools` | Enumerate the tools available to the signed-in user in the named org | yes |
 | `check_permission` | Ask whether a given tool call would be allowed, require approval, or be blocked | yes (see note) |
 | `list_pending_approvals` | List approval requests still awaiting a human decision | yes |
 | `check_approval_status` | Poll a pending approval request by its reference | yes |
+
+### Targeting the right organization
+
+An oakallow account can have more than one organization, and **each org has its own
+tools, rules, approvers, and alerting**. So a check must go to the org the action
+actually belongs to.
+
+`check_permission` and `list_my_tools` take an optional **`org`** argument — the org's
+external id (`org_oak_…`):
+
+- If the account has exactly one org, omit it.
+- If the account has more than one org, **pass `org`**. This skill is downloaded
+  per-org from the oakallow dashboard, so the org id for the org this skill governs is
+  stated below — pass that id on every `check_permission` call. If you omit it on a
+  multi-org account, the call is refused rather than sent to the wrong org.
+
+You cannot list orgs through the connector and you cannot reach an org you do not have
+access to — passing an org id you lack access to is refused. The org id comes from this
+skill (downloaded for that specific org), not from probing.
 
 > **Important side effect of `check_permission`:** it returns a read-only
 > verdict, but checking a tool oakallow has never seen is intentionally not a
@@ -91,7 +110,9 @@ another system or could be risky or irreversible.
    through oakallow. Remember these were registered by a human in the dashboard.
 
 2. **`check_permission`** for the specific action you intend to take. Describe
-   the action accurately. You get one of three verdicts:
+   the action accurately, and pass the **`org`** id this skill names if the account
+   has more than one org (see "Targeting the right organization"). You get one of
+   three verdicts:
    - `allowed` then proceed and perform the action.
    - `requires_approval` then an approval request has been created and a human is
      notified. Stop and go to step 3. Do not perform the action.

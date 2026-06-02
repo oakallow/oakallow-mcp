@@ -34,8 +34,8 @@ The connector is a **requester and pass-through**, not a decider:
 
 | Tool | Purpose | Reads only |
 |------|---------|:---:|
-| `list_my_tools` | Enumerate the tools available to the signed-in user in their org | yes |
-| `check_permission` | Ask whether a given tool call would be allowed, require approval, or be blocked | yes* |
+| `list_my_tools` | Enumerate the tools available to the signed-in user in the named org (`org` arg; see below) | yes |
+| `check_permission` | Ask whether a given tool call would be allowed, require approval, or be blocked (takes an `org` arg; see below) | yes* |
 | `list_pending_approvals` | List approval requests still awaiting a human decision | yes |
 | `check_approval_status` | Poll a pending approval request by reference number | yes |
 
@@ -44,6 +44,29 @@ side effect by design: Oakallow auto-creates a gated draft entry for that tool (
 conservative, fail-closed defaults) so the eventual call is governed and the owner can
 triage it from the dashboard. A `requires_approval` verdict also creates an approval
 request. This is intentional: an unknown tool is never silently trusted.
+
+## Choosing an organization
+
+An Oakallow account can have more than one organization, and each org sets its own tools,
+permission rules, approvers, and alert paths. So an action must be checked against the
+**right** org — that is what determines who gets asked to approve and under which rules.
+
+`check_permission` and `list_my_tools` accept an optional **`org`** argument: the org's
+external id (e.g. `org_oak_…`). The rule:
+
+- **One org on your account:** omit `org`. The connector uses your only org.
+- **More than one org:** pass `org` naming the org the action targets. If you omit it, the
+  call is refused with guidance rather than guessing the wrong org.
+
+You don't ask the connector to list your orgs — there is no org-enumeration tool. Instead,
+**download the org-specific skill from that org's dashboard.** Each org's skill carries its
+own org id and tells the agent to pass it. Install one skill per org you operate in; the
+agent reads the matching skill and passes the right `org` on every call.
+
+The connector authorizes the `org` you pass against your signed-in identity: you can only
+target an org you can actually act in (you are its team owner/admin, or you are in that
+org's approver group). Passing an org you don't have access to is refused — the skill is a
+convenience, not a grant of access.
 
 ## Resources
 
