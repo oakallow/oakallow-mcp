@@ -91,37 +91,42 @@ You cannot list orgs through the connector and you cannot reach an org you do no
 access to — passing an org id you lack access to is refused. The org id comes from this
 skill (downloaded for that specific org), not from probing.
 
-> **Important side effect of `check_permission`:** it returns a read-only
-> verdict, but checking a tool oakallow has never seen is intentionally not a
-> no-op. oakallow auto-creates a gated draft entry for that tool with
-> conservative, fail-closed defaults, so the eventual call is governed and the
-> owner can triage it from the dashboard. A `requires_approval` verdict also
-> creates an approval request. An unknown tool is never silently trusted, so do
-> not call `check_permission` speculatively on tools you have no intention of
-> using.
+> **`check_permission` is a dry-run.** It returns a read-only verdict
+> (`allowed` / `requires_approval` / `disabled`) and nothing else — it does NOT
+> create an approval request and does NOT return a reference (`REF-…`). The
+> approval and its `REF-…` are created later, when you call the gated tool itself
+> through oakallow (see the workflow below). One side effect to know: checking a
+> tool oakallow has never seen is intentionally not a no-op — oakallow
+> auto-creates a gated *draft* entry for that tool with conservative, fail-closed
+> defaults so the eventual call is governed and the owner can triage it. An
+> unknown tool is never silently trusted, so do not call `check_permission`
+> speculatively on tools you have no intention of using.
 
 ## Core workflow: a governed action
 
 Follow this sequence whenever you are about to take an action that affects
 another system or could be risky or irreversible.
 
-1. **(Optional, first time in a session) `list_my_tools`** to see what the
-   signed-in user is actually governed for, so you know which actions flow
-   through oakallow. Remember these were registered by a human in the dashboard.
+1. **(Optional) `check_permission`** for the action, passing the **`org`** id
+   this skill names (see "Targeting the right organization"). This is a dry-run:
+   it returns a verdict only and creates nothing.
+   - `allowed` then the action is permitted without approval — perform it
+     (step 5).
+   - `requires_approval` then it is gated — go to step 2 to create the approval.
+   - `disabled` / `blocked` then do not perform the action; surface the reason and
+     stop. Do not look for a workaround.
 
-2. **`check_permission`** for the specific action you intend to take. Describe
-   the action accurately, and pass the **`org`** id this skill names if the account
-   has more than one org (see "Targeting the right organization"). You get one of
-   three verdicts:
-   - `allowed` then proceed and perform the action.
-   - `requires_approval` then an approval request has been created and a human is
-     notified. Stop and go to step 3. Do not perform the action.
-   - `blocked` then do not perform the action. Explain to the user that oakallow
-     has blocked it and surface the reason. Do not look for a workaround.
+2. **Create the approval: call the gated tool itself through oakallow**, passing
+   the **`org`** id, the tool's parameters, and a clear **`reason`**. oakallow
+   does NOT execute the tool — when it is gated, oakallow creates the approval
+   request, notifies a human, and returns a `requires_approval` response carrying
+   a **reference (`REF-…`)**. This call is what mints the reference; there is no
+   separate "request approval" tool. (If it returns `allowed`, the action was
+   permitted — perform it. If `disabled`/`blocked`, stop.)
 
 3. **Wait for the human.** Tell the user an approval was requested and that a
    human approver must decide in the oakallow dashboard or app under enforced
-   MFA. Note the **reference** returned with the request.
+   MFA. Note the **`REF-…`** returned in step 2.
 
 4. **`check_approval_status`** using that reference to poll. Poll politely and do
    not hammer it. When the status resolves:
@@ -131,8 +136,9 @@ another system or could be risky or irreversible.
    - `expired` then the request timed out without a decision. Do not perform the
      action; offer to re-request if the user still wants it.
 
-5. **Perform the action.** oakallow records an immutable audit row for the
-   outcome.
+5. **Perform the action** on the customer's own system/connector (oakallow does
+   not execute customer tools). Each approval authorizes exactly one execution.
+   oakallow records an immutable audit row for the outcome.
 
 ## Writing the approval reason
 

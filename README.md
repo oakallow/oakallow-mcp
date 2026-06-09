@@ -39,11 +39,12 @@ The connector is a **requester and pass-through**, not a decider:
 | `list_pending_approvals` | List approval requests still awaiting a human decision | yes |
 | `check_approval_status` | Poll a pending approval request by reference number | yes |
 
-\* `check_permission` returns a read-only verdict, but checking an unregistered tool has a
-side effect by design: Oakallow auto-creates a gated draft entry for that tool (with
-conservative, fail-closed defaults) so the eventual call is governed and the owner can
-triage it from the dashboard. A `requires_approval` verdict also creates an approval
-request. This is intentional: an unknown tool is never silently trusted.
+\* `check_permission` returns a read-only verdict only — it does NOT create an approval or
+a reference. (The approval and its `REF-…` are created when you call the gated tool itself
+through oakallow.) It does have one side effect by design: checking an unregistered tool
+makes Oakallow auto-create a gated draft entry for it (with conservative, fail-closed
+defaults) so the eventual call is governed and the owner can triage it from the dashboard.
+This is intentional: an unknown tool is never silently trusted.
 
 ## Choosing an organization
 
