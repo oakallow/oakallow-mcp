@@ -90,12 +90,20 @@ connector. If the session resolves to no org, or to more than one, it returns
 
 ## Connecting
 
+**The remote endpoint requires OAuth 2.1 (PKCE) — there is no anonymous access.** An
+oakallow account is the prerequisite for connecting.
+
 Add `https://api.oakallow.io/mcp` as a custom connector in your MCP client (Claude,
 Claude Desktop, Cowork, ChatGPT, or any Streamable HTTP MCP host). You will be redirected
 to sign in to Oakallow and approve the requested scopes:
 
 - `mcp:read`: list tools, view pending approvals, check permissions, read activity.
 - `mcp:write`: create approval requests and mint run tokens.
+
+You don't configure any of this by hand: an unauthenticated request returns `401` with a
+`WWW-Authenticate` header pointing to the endpoint's RFC 9728 protected-resource metadata
+(`/.well-known/oauth-protected-resource`), so a spec-compliant MCP client discovers the
+authorization server and runs the OAuth flow automatically.
 
 See `examples/` for a Claude Desktop config and an OAuth flow walkthrough.
 
