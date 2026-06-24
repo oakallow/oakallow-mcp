@@ -28,7 +28,7 @@ This skill tells you, the agent, when and how to call oakallow's tools so a
 governed workflow behaves correctly.
 
 - **Endpoint:** `https://api.oakallow.io/mcp` (Streamable HTTP)
-- **Authorization:** self-hosted OAuth 2.1 (PKCE, S256), hosted by oakallow
+- **Authorization:** self-hosted OAuth 2.1 (PKCE, S256) for human-driven clients, or an `oak_agent_` bearer token for autonomous agents (both on the same endpoint)
 - **Website:** https://oakallow.com
 - **Scopes:** `mcp:read` (list, check, read activity), `mcp:write` (create approval requests)
 
@@ -47,6 +47,11 @@ connector anonymously.
   can never approve on a human's behalf.
 - If there is no valid oakallow session, the connector cannot be used until the
   human signs in. Surface that to the user rather than trying to work around it.
+- **Autonomous agents** that run with no human to sign in use a pre-issued
+  `oak_agent_` bearer token instead of the OAuth flow (`Authorization: Bearer
+  oak_agent_...`). The token is scoped to one org and the agent can submit and
+  check requests but never approve, the same governance still applies. A person
+  provisions it from the dashboard; see https://oakallow.io/info/agents.
 
 ## The mental model
 

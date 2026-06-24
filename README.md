@@ -90,12 +90,14 @@ connector. If the session resolves to no org, or to more than one, it returns
 
 ## Connecting
 
-**The remote endpoint requires OAuth 2.1 (PKCE) — there is no anonymous access.** An
-oakallow account is the prerequisite for connecting.
+**There is no anonymous access.** An oakallow account is the prerequisite for connecting,
+and the endpoint accepts two credential types: interactive OAuth 2.1 (PKCE) for a
+human-driven client, or an `oak_agent_` bearer token for an autonomous agent (see
+[Autonomous agents](#autonomous-agents-oak_agent_-token) below).
 
-Add `https://api.oakallow.io/mcp` as a custom connector in your MCP client (Claude,
-Claude Desktop, Cowork, ChatGPT, or any Streamable HTTP MCP host). You will be redirected
-to sign in to Oakallow and approve the requested scopes:
+For the human-driven OAuth path, add `https://api.oakallow.io/mcp` as a custom connector
+in your MCP client (Claude, Claude Desktop, Cowork, ChatGPT, or any Streamable HTTP MCP
+host). You will be redirected to sign in to Oakallow and approve the requested scopes:
 
 - `mcp:read`: list tools, view pending approvals, check permissions, read activity.
 - `mcp:write`: create approval requests and mint run tokens.
@@ -106,6 +108,20 @@ You don't configure any of this by hand: an unauthenticated request returns `401
 authorization server and runs the OAuth flow automatically.
 
 See `examples/` for a Claude Desktop config and an OAuth flow walkthrough.
+
+### Autonomous agents (`oak_agent_` token)
+
+OAuth assumes a human can complete the interactive sign-in. An autonomous agent that runs
+on its own authenticates to the same `https://api.oakallow.io/mcp` endpoint with a
+pre-issued bearer token instead: `Authorization: Bearer oak_agent_...`. The endpoint
+checks for an `oak_agent_` bearer before the OAuth provider, so no consent screen or
+interactive login is involved.
+
+An agent identity is scoped to one organization, can submit and check permission requests
+but never approve, is rate-limited per identity, and is stored only as a SHA-256 hash (the
+raw token is shown once at creation). Provision one from the dashboard's Account &rarr;
+Agents page (owner/admin only). See [oakallow.io/info/agents](https://oakallow.io/info/agents)
+for the full model.
 
 ## Skill
 
