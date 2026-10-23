@@ -71,8 +71,10 @@ EOF
 echo
 echo "== 7. Revoke when done (RFC 7009) =="
 cat <<'EOF'
-curl -s -X POST "https://api.oakallow.io/revoke" \
+curl -s -X POST "https://api.oakallow.io/token" \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "token=<access_or_refresh_token>"
+  -d "token=<access_or_refresh_token>" \
+  -d "client_id=<your_client_id>"
+# Revocation shares the token endpoint (see revocation_endpoint in step 2's metadata).
 # The token is invalidated immediately.
 EOF

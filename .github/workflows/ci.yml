@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly, Mondays 14:00 UTC: catches drift on the live endpoint between commits.
+    - cron: "0 14 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate listing files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install check-jsonschema
+        run: pip install check-jsonschema==0.29.4
+
+      - name: JSON files parse
+        run: |
+          for f in server.json tools.json glama.json examples/*.json; do
+            python -m json.tool "$f" > /dev/null
+            echo "ok $f"
+          done
+
+      - name: server.json matches the MCP Registry schema
+        run: |
+          schema="$(python -c 'import json; print(json.load(open("server.json"))["$schema"])')"
+          echo "schema: $schema"
+          check-jsonschema --schemafile "$schema" server.json
+
+      - name: Versions agree
+        run: |
+          python - <<'EOF'
+          import json, re, sys
+          server = json.load(open("server.json"))["version"]
+          tools = json.load(open("tools.json"))["server"]["version"]
+          changelog = re.search(r"^## (\S+)", open("CHANGELOG.md").read(), re.M).group(1)
+          print(f"server.json={server} tools.json={tools} CHANGELOG={changelog}")
+          if not (server == tools == changelog):
+              sys.exit("server.json, tools.json, and the top CHANGELOG entry must have the same version")
+          EOF
+
+      - name: Example scripts have valid syntax
+        run: |
+          for f in examples/*.sh; do
+            bash -n "$f"
+            echo "ok $f"
+          done
+
+  live-endpoint:
+    name: Live endpoint conformance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Unauthenticated request is refused with a discovery pointer
+        run: |
+          headers="$(curl -s -D - -o /dev/null -X POST https://api.oakallow.io/mcp \
+            -H 'Content-Type: application/json' \
+            -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}')"
+          echo "$headers" | grep -E '^HTTP/[0-9.]+ 401' \
+            || { echo "expected 401 without credentials"; exit 1; }
+          echo "$headers" | grep -i '^www-authenticate:.*resource_metadata=' \
+            || { echo "expected WWW-Authenticate with resource_metadata (RFC 9728)"; exit 1; }
+
+      - name: Protected resource metadata (RFC 9728)
+        run: |
+          curl -sf https://api.oakallow.io/.well-known/oauth-protected-resource/mcp -o prm.json
+          python - <<'EOF'
+          import json, sys
+          d = json.load(open("prm.json"))
+          assert d["resource"] == "https://api.oakallow.io/mcp", d.get("resource")
+          assert d["authorization_servers"], "no authorization_servers"
+          for scope in ("mcp:read", "mcp:write"):
+              assert scope in d.get("scopes_supported", []), f"missing scope {scope}"
+          print("ok protected resource metadata")
+          EOF
+
+      - name: Authorization server metadata (RFC 8414)
+        run: |
+          curl -sf https://api.oakallow.io/.well-known/oauth-authorization-server -o asm.json
+          python - <<'EOF'
+          import json, sys
+          d = json.load(open("asm.json"))
+          assert "S256" in d.get("code_challenge_methods_supported", []), "S256 PKCE not advertised"
+          assert "authorization_code" in d.get("grant_types_supported", []), "authorization_code not advertised"
+          assert "password" not in d.get("grant_types_supported", []), "password grant must not be offered"
+          for key in ("authorization_endpoint", "token_endpoint", "registration_endpoint", "revocation_endpoint"):
+              assert d.get(key, "").startswith("https://api.oakallow.io/"), f"unexpected {key}: {d.get(key)}"
+          print("ok authorization server metadata")
+          EOF
