@@ -1,7 +1,5 @@
 # Oakallow MCP Server
 
-[![MCP Badge](https://lobehub.com/badge/mcp/oakallow-oakallow-mcp)](https://lobehub.com/mcp/oakallow-oakallow-mcp)
-[![MCP Badge](https://lobehub.com/badge/mcp-full/oakallow-oakallow-mcp)](https://lobehub.com/mcp/oakallow-oakallow-mcp)
 [![CI](https://github.com/oakallow/oakallow-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/oakallow/oakallow-mcp/actions/workflows/ci.yml)
 
 Runtime permission, approval, and audit governance for AI agent tool execution.
