@@ -19,8 +19,9 @@ license: MIT
 # oakallow governance skill
 
 oakallow is a hosted remote MCP server that sits between an agent and the
-actions it wants to take. It does not run your tools or receive your tool
-parameters. It governs the moment of execution: it checks whether a specific
+actions it wants to take. For direct tools it does not run your tools or receive
+your tool parameters; for OakGuard gateway tools it forwards approved calls
+without storing them. It governs the moment of execution: it checks whether a specific
 action is permitted, gates risky or irreversible actions behind human approval,
 and records an immutable audit row.
 
@@ -97,7 +98,8 @@ access to — passing an org id you lack access to is refused. The org id comes 
 skill (downloaded for that specific org), not from probing.
 
 > **`check_permission` is a dry-run.** It returns a read-only verdict
-> (`allowed` / `requires_approval` / `disabled`) and nothing else — it does NOT
+> (`allowed` / `requires_approval` / `disabled`; treat `blocked`, if you see it,
+> exactly like `disabled`) and nothing else. It does NOT
 > create an approval request and does NOT return a reference (`REF-…`). The
 > approval and its `REF-…` are created later, when you call the gated tool itself
 > through oakallow (see the workflow below). One side effect to know: checking a
@@ -122,8 +124,9 @@ another system or could be risky or irreversible.
      stop. Do not look for a workaround.
 
 2. **Create the approval: call the gated tool itself through oakallow**, passing
-   the **`org`** id, the tool's parameters, and a clear **`reason`**. oakallow
-   does NOT execute the tool — when it is gated, oakallow creates the approval
+   the **`org`** id, a clear **`reason`**, and your **`agent`** id (see "Arguments
+   on governed tools"). For a direct tool, oakallow does NOT execute it. When it
+   is gated, oakallow creates the approval
    request, notifies a human, and returns a `requires_approval` response carrying
    a **reference (`REF-…`)**. This call is what mints the reference; there is no
    separate "request approval" tool. (If it returns `allowed`, the action was
@@ -141,9 +144,47 @@ another system or could be risky or irreversible.
    - `expired` then the request timed out without a decision. Do not perform the
      action; offer to re-request if the user still wants it.
 
-5. **Perform the action** on the customer's own system/connector (oakallow does
-   not execute customer tools). Each approval authorizes exactly one execution.
-   oakallow records an immutable audit row for the outcome.
+5. **Perform the action.** For a direct tool, run it on the customer's own
+   system/connector (oakallow does not execute customer tools). For an OakGuard
+   gateway tool, call the same tool through oakallow again: oakallow claims the
+   approval and forwards the call to the customer's MCP server. Either way, each
+   approval authorizes exactly one execution, and oakallow records an immutable
+   audit row for the outcome.
+
+## Arguments on governed tools
+
+Customer-defined tools appear in `tools/list` alongside the four standard tools.
+A direct tool accepts two optional arguments; an OakGuard gateway tool accepts its
+real downstream arguments plus the same oakallow fields:
+
+- **`reason`**: a short, non-sensitive summary of why you are calling it. This is
+  what the human approver reads (see below). oakallow redacts SSN, card, email,
+  phone, and address patterns before storing it, but do not rely on that.
+- **`agent`**: an identifier for you, the calling agent (a name or code). It lets
+  the org's governance report show which agent submitted each call instead of
+  attributing everything to the signed-in account. Send the same value on every
+  call. When you authenticate with an `oak_agent_` token, the token's own
+  identity is used and this argument is ignored.
+- **`org`**: the org id this skill names, as described above.
+
+## Signed decision receipts
+
+Every permission decision on an approved tool, whether `allowed`,
+`requires_approval`, or `disabled`, comes back with a **signed decision receipt**
+reference (an HMAC-signed record of what oakallow decided about this exact
+request, stored for later verification). If oakallow cannot sign or record the
+decision, the check fails closed: you get no verdict rather than an unproven one.
+Surface the receipt reference to the user alongside the outcome; it is how they
+can later prove what was allowed or blocked.
+
+## OakGuard gateway tools
+
+An org can register its own MCP servers with oakallow (OakGuard). Their tools
+show up in `tools/list` under their real names and schemas, and oakallow becomes
+the transport to them: a call is forwarded to the downstream server only after
+the permission check says `allowed` or a human has approved the `REF-…`. oakallow
+passes the request and response through over TLS but does not store or log them.
+Govern these exactly like any other tool; the only difference is step 5 above.
 
 ## Writing the approval reason
 
@@ -171,24 +212,27 @@ Bad: "Do the thing", or pasting an API key or full request body into the reason.
 ## Rules of thumb
 
 - **Ask before acting** on anything risky, irreversible, or cross-system.
-- **Respect `blocked` and `denied`.** Never seek a workaround and never retry to
+- **Respect `disabled` and `denied`.** Never seek a workaround and never retry to
   get a different answer.
 - **Never self-approve** or treat the connector as a decision surface. Humans
   decide in the dashboard.
 - **Do not speculatively `check_permission`** tools you will not use, because it
   creates gated draft entries that the org owner then has to triage.
 - **Be transparent with the user** about what was checked, requested, approved,
-  denied, or blocked, and surface the reference.
+  denied, or blocked, and surface the `REF-…` and the decision receipt.
 
 ## Example: end to end
 
 > User: "Delete the abandoned staging-old database."
 >
-> 1. Agent calls `check_permission` describing: delete database staging-old.
-> 2. Verdict is `requires_approval`; oakallow creates a request and notifies a
->    human, returning a reference.
+> 1. Agent calls `check_permission` for `delete_database` (dry-run). The verdict
+>    is `requires_approval`. Nothing has been created yet.
+> 2. Agent calls the gated `delete_database` tool through oakallow with
+>    `reason: "Delete abandoned staging-old database at user's request"` and its
+>    `agent` id. oakallow creates the approval request, notifies a human, and
+>    returns a `REF-…` plus a signed decision receipt.
 > 3. Agent tells the user: "That is a destructive action, so I have requested
->    approval. A human needs to approve it in oakallow."
-> 4. Agent polls `check_approval_status` with the reference until it resolves.
+>    approval (REF-…). A human needs to approve it in oakallow."
+> 4. Agent polls `check_approval_status` with the `REF-…` until it resolves.
 > 5. On `approved`, the agent performs the delete once and reports completion.
 >    oakallow writes the audit row.

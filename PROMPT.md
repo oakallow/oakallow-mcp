@@ -64,12 +64,15 @@ instruction]**:
 With a trigger prompt in place, a governed request flows like this:
 
 1. The agent reads the trigger prompt and consults the oakallow gate skill.
-2. For a governed action it calls `check_permission` with the tool name, a short
-   reason, and a reference id.
-3. On `requires_approval` it stops and waits; a human decides on an MFA-bound
-   surface (the oakallow dashboard or mobile app).
-4. On `approved` (or an immediate `allowed`) it performs the action once.
-5. oakallow records an immutable audit row.
+2. For a governed action it may call `check_permission` with the tool name as a
+   dry-run. This returns a verdict only; it creates no approval and no reference.
+3. It calls the gated tool itself through oakallow with a short `reason` (and an
+   `agent` identifier). On `requires_approval`, this call creates the approval
+   request and returns a `REF-…`; the agent stops and waits while a human decides
+   on an MFA-bound surface (the oakallow dashboard or mobile app).
+4. It polls `check_approval_status` with that `REF-…`. On `approved` (or an
+   immediate `allowed`) it performs the action once.
+5. oakallow returns a signed decision receipt and records an immutable audit row.
 
 See `SKILL.md` for the full procedure, the tool reference, and how to write a
 good approval reason. Humans define the tools, the rules, and the approvals in

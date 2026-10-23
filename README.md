@@ -25,8 +25,9 @@ app, under enforced multi-factor authentication.
 
 The connector is a **requester and pass-through**, not a decider:
 
-- It can list your tools, check permissions, request approvals, and mint run tokens once an
-  action is approved.
+- It can list your tools, check permissions, request approvals, return a signed receipt for
+  every decision, and, for servers connected through the OakGuard gateway, forward a call
+  once it is approved.
 - It cannot approve or deny on a human's behalf. Decisions happen on a separate,
   MFA-bound surface (the dashboard), never over the connector.
 
@@ -69,6 +70,54 @@ target an org you can actually act in (you are its team owner/admin, or you are 
 org's approver group). Passing an org you don't have access to is refused — the skill is a
 convenience, not a grant of access.
 
+## Calling a governed tool
+
+Alongside the four standard tools, `tools/list` returns the customer-defined tools your
+org has approved. Calling one of those through oakallow is how an approval gets created:
+there is no separate "request approval" tool. A direct tool accepts two optional
+arguments, plus `org` as above:
+
+| Argument | Purpose |
+|----------|---------|
+| `reason` | Short, non-sensitive summary of why the call is being made. This is what the human approver reads. Oakallow redacts SSN, card, email, phone, and address patterns before storing it. |
+| `agent` | An identifier for the calling agent (a name, code, or number). The org's governance report uses it to show which agent submitted each call instead of attributing everything to the signed-in account. Send the same value consistently. Ignored when the caller authenticates with an `oak_agent_` token, whose own identity is used. |
+
+The response is one of `allowed` (run the action on its own connector), `requires_approval`
+(an approval request was created and a `REF-…` is returned for polling with
+`check_approval_status`), or `disabled` (stop; the action is blocked by policy).
+
+## Signed decision receipts
+
+Every permission decision on an approved tool returns a **signed decision receipt**,
+whatever the verdict: `allowed`, `requires_approval`, and `disabled` are all signed the
+same way. The receipt is an HMAC-SHA256 signature over the decision, the tool, a hash of
+the call's parameters, the tenant, resource, method, and org, and it is stored so the
+decision can be re-verified later. A `disabled` receipt is the proof that oakallow blocked
+the action.
+
+If a decision cannot be signed or recorded, the check fails closed: oakallow returns no
+verdict rather than one it cannot prove.
+
+## OakGuard gateway
+
+By default oakallow is a checkpoint beside your tools: it decides, and you execute.
+**OakGuard** lets an org register its own MCP servers with oakallow so that oakallow
+becomes the transport to them instead:
+
+- **OAuth 2.1 is mandatory downstream.** Registration is refused unless the server
+  advertises the OAuth 2.1 essentials (authorization code with S256 PKCE, RFC 9728 and
+  RFC 8414 discovery, no password grant). oakallow registers itself as the server's OAuth
+  client and keeps the downstream tokens encrypted.
+- **Tools appear under their real names and schemas** in `tools/list`. Newly discovered
+  tools land as drafts that require approval until an admin enables them.
+- **A call is forwarded only after it is allowed** by the permission rules or approved by
+  a human. Each approval rides downstream exactly once.
+- **Payloads pass through but are not kept.** oakallow carries the request and response
+  over TLS on both legs and does not store or log them. Receipts and the audit log
+  record the decision, not the data.
+
+Servers are registered, paused, and revoked from the OakGuard tab in the dashboard.
+
 ## Resources
 
 oakallow exposes two read-only MCP resources. They are preflight signals an agent (or a
@@ -107,7 +156,9 @@ You don't configure any of this by hand: an unauthenticated request returns `401
 (`/.well-known/oauth-protected-resource`), so a spec-compliant MCP client discovers the
 authorization server and runs the OAuth flow automatically.
 
-See `examples/` for a Claude Desktop config and an OAuth flow walkthrough.
+See `examples/` for a Claude Desktop config, an OAuth flow walkthrough, and an
+`oak_agent_` token walkthrough. [`tools.json`](./tools.json) has the exact schemas of the
+standard tools.
 
 ### Autonomous agents (`oak_agent_` token)
 
@@ -127,7 +178,7 @@ for the full model.
 
 [`SKILL.md`](./SKILL.md) is an agent skill that documents when and how to use the
 oakallow tools: the request, approve, poll, and act workflow, how to phrase
-approval reasons, and what to do on `allowed`, `requires_approval`, or `blocked`
+approval reasons, and what to do on `allowed`, `requires_approval`, or `disabled`
 verdicts. Point your agent at it to govern tool actions correctly.
 
 ## Trigger prompts
@@ -140,16 +191,25 @@ pattern for a real request.
 
 ## How a governed call works
 
-1. The agent calls Oakallow with its credential.
-2. Oakallow resolves the permission rule for the specific tool, tenant, and resource.
-3. If the action is allowed, Oakallow mints a single-use, HMAC-signed run token.
-4. If approval is required, an approval request is created and a human is notified. The
-   agent's call is held until the request is decided or expires.
-5. The agent uses the run token to perform the action; Oakallow writes an immutable audit
-   row capturing the outcome.
+1. The agent calls the tool through Oakallow with its credential, a `reason`, and its
+   `agent` id.
+2. Oakallow resolves the permission rule for the specific tool, tenant, and resource, and
+   signs a decision receipt for the verdict.
+3. If the action is allowed, the agent performs it: on its own connector for a direct
+   tool, or Oakallow forwards it for an OakGuard gateway tool.
+4. If approval is required, an approval request is created, a human is notified, and the
+   agent receives a `REF-…` to poll. Once a human approves under MFA, the action runs
+   exactly once.
+5. Oakallow writes an immutable audit row capturing the outcome.
 
-Oakallow lives outside the execution path. It governs and records what was reported; it
-does not run your tools or receive your tool parameters beyond a PII-scrubbed reason.
+For direct tools, Oakallow lives outside the execution path: it governs and records what
+was reported, and it does not run your tools or receive your tool parameters beyond a
+PII-scrubbed reason. For OakGuard gateway tools, it is the transport for approved calls
+but still keeps none of the payloads.
+
+Outside MCP, the REST API (`POST /v1/tokens/mint`) can also mint a single-use,
+HMAC-signed run token that binds the tool and its parameters, for your backend to verify
+before executing.
 
 ## License
 

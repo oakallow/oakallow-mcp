@@ -1,0 +1,102 @@
+{
+  "$comment": "Snapshot of the four standard tools exactly as tools/list returns them from https://api.oakallow.io/mcp. Customer-defined and OakGuard gateway tools are per-org and not listed here.",
+  "server": {
+    "name": "oakallow",
+    "version": "1.1.0"
+  },
+  "tools": [
+    {
+      "name": "list_my_tools",
+      "description": "Enumerate the customer-defined tools currently available to the signed-in user in the named org (or their only org if they have one). Returns tool names, descriptions, default permission, and risk level.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "org": {
+            "type": "string",
+            "description": "The oakallow organization external id (e.g. org_oak_…) this action targets. Required when your account has more than one org; optional if you have exactly one. Get it from the org-specific oakallow skill you downloaded for that org."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "check_permission",
+      "description": "Ask whether a given tool call would be allowed, require approval, or be blocked — without actually making the call. Returns the resolved permission verdict and the level it resolved from.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "tool_name": {
+            "type": "string",
+            "description": "The tool to evaluate."
+          },
+          "org": {
+            "type": "string",
+            "description": "The oakallow organization external id (e.g. org_oak_…) this action targets. Required when your account has more than one org; optional if you have exactly one. Get it from the org-specific oakallow skill you downloaded for that org."
+          },
+          "resource_id": {
+            "type": "string",
+            "description": "Optional resource external id."
+          },
+          "method": {
+            "type": "string",
+            "description": "Optional method name."
+          },
+          "tenant_id": {
+            "type": "string",
+            "description": "Optional tenant external id."
+          }
+        },
+        "required": [
+          "tool_name"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "list_pending_approvals",
+      "description": "List approval requests still awaiting a human decision for the signed-in user. Useful for agents picking up an abandoned workflow.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "check_approval_status",
+      "description": "Check the status of a pending approval request by REF number. Use this between retries of a tool call that is pending approval — do NOT call the original tool again to check status, that will create a duplicate approval.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string",
+            "description": "REF number returned from a prior tool call that required approval."
+          }
+        },
+        "required": [
+          "reference"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    }
+  ]
+}
