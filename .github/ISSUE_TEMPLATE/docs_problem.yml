@@ -1,0 +1,28 @@
+name: Documentation or example problem
+description: Something in this repository doesn't match how the live server behaves, or an example fails.
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping keep the docs accurate. Do not paste real tokens, client secrets, or org ids.
+  - type: input
+    id: file
+    attributes:
+      label: File
+      description: Which file is affected?
+      placeholder: README.md, SKILL.md, examples/oauth-flow.sh, ...
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What's wrong
+      description: Quote the part that's wrong and describe what the server actually does.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested fix
+      description: Optional. How should it read instead?

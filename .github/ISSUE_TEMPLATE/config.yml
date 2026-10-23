@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/oakallow/oakallow-mcp/blob/main/SECURITY.md
+    about: Please email security@oakallow.io instead of opening a public issue.
+  - name: Account, billing, or org setup help
+    url: https://oakallow.io/faq
+    about: For product support, email support@oakallow.io or see the FAQ.

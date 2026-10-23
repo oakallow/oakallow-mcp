@@ -84,17 +84,17 @@ An oakallow account can have more than one organization, and **each org has its 
 tools, rules, approvers, and alerting**. So a check must go to the org the action
 actually belongs to.
 
-`check_permission` and `list_my_tools` take an optional **`org`** argument — the org's
+`check_permission` and `list_my_tools` take an optional **`org`** argument: the org's
 external id (`org_oak_…`):
 
 - If the account has exactly one org, omit it.
 - If the account has more than one org, **pass `org`**. This skill is downloaded
   per-org from the oakallow dashboard, so the org id for the org this skill governs is
-  stated below — pass that id on every `check_permission` call. If you omit it on a
+  stated below. Pass that id on every `check_permission` call. If you omit it on a
   multi-org account, the call is refused rather than sent to the wrong org.
 
 You cannot list orgs through the connector and you cannot reach an org you do not have
-access to — passing an org id you lack access to is refused. The org id comes from this
+access to. Passing an org id you lack access to is refused. The org id comes from this
 skill (downloaded for that specific org), not from probing.
 
 > **`check_permission` is a dry-run.** It returns a read-only verdict
@@ -103,7 +103,7 @@ skill (downloaded for that specific org), not from probing.
 > create an approval request and does NOT return a reference (`REF-…`). The
 > approval and its `REF-…` are created later, when you call the gated tool itself
 > through oakallow (see the workflow below). One side effect to know: checking a
-> tool oakallow has never seen is intentionally not a no-op — oakallow
+> tool oakallow has never seen is intentionally not a no-op: oakallow
 > auto-creates a gated *draft* entry for that tool with conservative, fail-closed
 > defaults so the eventual call is governed and the owner can triage it. An
 > unknown tool is never silently trusted, so do not call `check_permission`
@@ -117,9 +117,9 @@ another system or could be risky or irreversible.
 1. **(Optional) `check_permission`** for the action, passing the **`org`** id
    this skill names (see "Targeting the right organization"). This is a dry-run:
    it returns a verdict only and creates nothing.
-   - `allowed` then the action is permitted without approval — perform it
+   - `allowed` then the action is permitted without approval, so perform it
      (step 5).
-   - `requires_approval` then it is gated — go to step 2 to create the approval.
+   - `requires_approval` then it is gated, so go to step 2 to create the approval.
    - `disabled` / `blocked` then do not perform the action; surface the reason and
      stop. Do not look for a workaround.
 
@@ -130,7 +130,7 @@ another system or could be risky or irreversible.
    request, notifies a human, and returns a `requires_approval` response carrying
    a **reference (`REF-…`)**. This call is what mints the reference; there is no
    separate "request approval" tool. (If it returns `allowed`, the action was
-   permitted — perform it. If `disabled`/`blocked`, stop.)
+   permitted, so perform it. If `disabled`/`blocked`, stop.)
 
 3. **Wait for the human.** Tell the user an approval was requested and that a
    human approver must decide in the oakallow dashboard or app under enforced

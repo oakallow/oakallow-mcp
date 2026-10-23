@@ -40,7 +40,7 @@ The connector is a **requester and pass-through**, not a decider:
 | `list_pending_approvals` | List approval requests still awaiting a human decision | yes |
 | `check_approval_status` | Poll a pending approval request by reference number | yes |
 
-\* `check_permission` returns a read-only verdict only — it does NOT create an approval or
+\* `check_permission` returns a read-only verdict only. It does NOT create an approval or
 a reference. (The approval and its `REF-…` are created when you call the gated tool itself
 through oakallow.) It does have one side effect by design: checking an unregistered tool
 makes Oakallow auto-create a gated draft entry for it (with conservative, fail-closed
@@ -51,7 +51,7 @@ This is intentional: an unknown tool is never silently trusted.
 
 An Oakallow account can have more than one organization, and each org sets its own tools,
 permission rules, approvers, and alert paths. So an action must be checked against the
-**right** org — that is what determines who gets asked to approve and under which rules.
+**right** org, because that is what determines who gets asked to approve and under which rules.
 
 `check_permission` and `list_my_tools` accept an optional **`org`** argument: the org's
 external id (e.g. `org_oak_…`). The rule:
@@ -60,14 +60,14 @@ external id (e.g. `org_oak_…`). The rule:
 - **More than one org:** pass `org` naming the org the action targets. If you omit it, the
   call is refused with guidance rather than guessing the wrong org.
 
-You don't ask the connector to list your orgs — there is no org-enumeration tool. Instead,
+You don't ask the connector to list your orgs; there is no org-enumeration tool. Instead,
 **download the org-specific skill from that org's dashboard.** Each org's skill carries its
 own org id and tells the agent to pass it. Install one skill per org you operate in; the
 agent reads the matching skill and passes the right `org` on every call.
 
 The connector authorizes the `org` you pass against your signed-in identity: you can only
 target an org you can actually act in (you are its team owner/admin, or you are in that
-org's approver group). Passing an org you don't have access to is refused — the skill is a
+org's approver group). Passing an org you don't have access to is refused. The skill is a
 convenience, not a grant of access.
 
 ## Calling a governed tool

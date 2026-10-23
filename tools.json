@@ -26,7 +26,7 @@
     },
     {
       "name": "check_permission",
-      "description": "Ask whether a given tool call would be allowed, require approval, or be blocked — without actually making the call. Returns the resolved permission verdict and the level it resolved from.",
+      "description": "Ask whether a given tool call would be allowed, require approval, or be blocked, without actually making the call. Returns the resolved permission verdict and the level it resolved from.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -78,7 +78,7 @@
     },
     {
       "name": "check_approval_status",
-      "description": "Check the status of a pending approval request by REF number. Use this between retries of a tool call that is pending approval — do NOT call the original tool again to check status, that will create a duplicate approval.",
+      "description": "Check the status of a pending approval request by REF number. Use this between retries of a tool call that is pending approval. Do NOT call the original tool again to check status; that will create a duplicate approval.",
       "inputSchema": {
         "type": "object",
         "properties": {

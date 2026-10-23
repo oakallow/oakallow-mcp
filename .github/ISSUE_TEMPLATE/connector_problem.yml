@@ -1,0 +1,45 @@
+name: Connector problem
+description: Connecting to https://api.oakallow.io/mcp or calling a tool doesn't work as documented.
+labels: ["connector"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Never paste access tokens, refresh tokens, `oak_agent_` tokens, or API keys here.**
+        For security issues, email security@oakallow.io instead. For account or billing help, email support@oakallow.io.
+  - type: input
+    id: client
+    attributes:
+      label: MCP client
+      description: Which client were you using?
+      placeholder: Claude Desktop, Cowork, ChatGPT, Cursor, Glama Inspector, custom agent, ...
+    validations:
+      required: true
+  - type: dropdown
+    id: auth
+    attributes:
+      label: How you authenticated
+      options:
+        - OAuth 2.1 sign-in
+        - oak_agent_ token
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: The steps you took, what you expected, and what you got instead. Include any error text.
+    validations:
+      required: true
+  - type: input
+    id: when
+    attributes:
+      label: When it happened
+      description: Date and time, with time zone.
+    validations:
+      required: true
+  - type: input
+    id: references
+    attributes:
+      label: References
+      description: Optional. Any REF-… approval reference or decision receipt reference you received.
