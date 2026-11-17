@@ -3,6 +3,23 @@
 All notable changes to the Oakallow MCP server listing are documented here. Versions
 match the `version` field in `server.json`.
 
+## 1.2.0
+
+- **Tool titles.** Every tool in `tools/list` can now carry a human-readable
+  `annotations.title`, so clients and directories show a display name instead of the
+  raw tool name.
+  - The four standard tools: `List my tools`, `Check permission`,
+    `List pending approvals`, `Check approval status`.
+  - Customer-defined tools: an optional `title` (up to 128 characters) on
+    `POST /v1/tools/seed`, the tool create, update and bulk endpoints, and the
+    dashboard and mobile tool editors.
+  - OakGuard gateway tools: the downstream server's own title (`annotations.title`,
+    else the top-level `title`) is stored on sync. A title set in oakallow is never
+    overwritten.
+  - A tool with a title but no declared safety hints returns `annotations: { title }`
+    only. oakallow never fills in hints the customer has not declared.
+- `tools.json` snapshot updated with the standard tool titles.
+
 ## 1.1.0
 
 - **OakGuard gateway.** Orgs can register their own MCP servers with oakallow.
