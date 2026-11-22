@@ -73,13 +73,24 @@ convenience, not a grant of access.
 
 Alongside the four standard tools, `tools/list` returns the customer-defined tools your
 org has approved. Calling one of those through oakallow is how an approval gets created:
-there is no separate "request approval" tool. A direct tool accepts two optional
+there is no separate "request approval" tool. A direct tool accepts these optional
 arguments, plus `org` as above:
 
 | Argument | Purpose |
 |----------|---------|
 | `reason` | Short, non-sensitive summary of why the call is being made. This is what the human approver reads. Oakallow redacts SSN, card, email, phone, and address patterns before storing it. |
 | `agent` | An identifier for the calling agent (a name, code, or number). The org's governance report uses it to show which agent submitted each call instead of attributing everything to the signed-in account. Send the same value consistently. Ignored when the caller authenticates with an `oak_agent_` token, whose own identity is used. |
+| `oakallow_resource` | The resource this call acts on (its external id in oakallow). |
+| `oakallow_method` | The method name, as set up in oakallow. |
+| `oakallow_tenant` | The tenant (its external id in oakallow). |
+
+`oakallow_resource`, `oakallow_method` and `oakallow_tenant` are also accepted by gateway
+tools and are removed before the call is forwarded.
+
+- A value that is not set up in oakallow is refused. It never defaults to allowed.
+- If one is left out and a rule for the tool names one, the strictest of those rules applies.
+- An agent locked to resources or methods must send one from its list on every call.
+- One request can be pending per caller, tool and target. Calling again returns the same `REF-…`.
 
 The response is one of `allowed` (run the action on its own connector), `requires_approval`
 (an approval request was created and a `REF-…` is returned for polling with

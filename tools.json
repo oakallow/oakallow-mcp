@@ -2,7 +2,7 @@
   "$comment": "Snapshot of the four standard tools exactly as tools/list returns them from https://api.oakallow.io/mcp. Customer-defined and OakGuard gateway tools are per-org and not listed here.",
   "server": {
     "name": "oakallow",
-    "version": "1.2.0"
+    "version": "1.3.0"
   },
   "tools": [
     {

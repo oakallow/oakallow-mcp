@@ -3,6 +3,32 @@
 All notable changes to the Oakallow MCP server listing are documented here. Versions
 match the `version` field in `server.json`.
 
+## 1.3.0
+
+- **Resource, method and tenant on governed tools.** Customer-defined and gateway tools
+  accept optional `oakallow_resource`, `oakallow_method` and `oakallow_tenant`
+  arguments, so resource, method and tenant rules apply to MCP calls. They are prefixed
+  so they never clash with a tool's own arguments, and are removed before a gateway
+  call is forwarded.
+  - A value that is not set up in oakallow is refused. It never defaults to allowed.
+  - If one is left out and a rule for the tool names one, the strictest of those rules
+    applies.
+  - `check_permission` resolves exactly like the call it previews and also accepts the
+    prefixed names.
+- **Agents locked to targets.** An org can lock an agent to a list of resources and/or
+  methods. A locked agent must send one from its list on every call; anything else is
+  refused.
+- **One pending request per caller and target.** Enforced by the database, so
+  simultaneous identical calls create one approval request. Calling again returns the
+  same `REF-…`.
+- **Approval limits.** New approval requests are refused with a clear message when a
+  caller has created 30 in the last minute, or when the org's pending limits are
+  reached (default 25 per caller, 250 per org).
+- **Request binding.** The approval request fingerprint now covers the resource and
+  method when present. Requests without them verify exactly as before.
+- `SKILL.md` and `README.md` document the new arguments; `server.json` and `tools.json`
+  version 1.3.0.
+
 ## 1.2.0
 
 - **Tool titles.** Every tool in `tools/list` can now carry a human-readable
