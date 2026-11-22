@@ -166,6 +166,14 @@ real downstream arguments plus the same oakallow fields:
   call. When you authenticate with an `oak_agent_` token, the token's own
   identity is used and this argument is ignored.
 - **`org`**: the org id this skill names, as described above.
+- **`oakallow_resource`**, **`oakallow_method`**, **`oakallow_tenant`**: optional.
+  Send them when the action targets a specific resource, method or tenant.
+  - Each must be set up in oakallow exactly as sent. If not, the call is refused.
+    It never defaults to allowed.
+  - If you leave one out and a rule for the tool names one, you get the strictest
+    of those rules.
+  - If your agent is locked to resources or methods, you must send one from its
+    list on every call. Anything else is refused.
 
 ## Signed decision receipts
 
