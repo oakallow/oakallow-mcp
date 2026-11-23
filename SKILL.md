@@ -10,9 +10,10 @@ description: >-
   required to sign in, and the tools an agent can use, the rules that govern
   them, and the approvals themselves are all defined and decided by a human in
   the oakallow dashboard. Covers the oakallow MCP tools: list_my_tools,
-  check_permission, list_pending_approvals, and check_approval_status. Use it
-  for phrases like "is this allowed", "request approval", "needs a human to
-  approve", "check the approval", "what can I do here", or "audit this action".
+  check_permission, list_pending_approvals, check_approval_status, and
+  list_approvals_waiting_for_me. Use it for phrases like "is this allowed", "request
+  approval", "needs a human to approve", "check the approval", "what is waiting
+  for me to approve", "what can I do here", or "audit this action".
 license: MIT
 ---
 
@@ -75,8 +76,9 @@ decision through the connector.
 |------|---------|:---:|
 | `list_my_tools` | Enumerate the tools available to the signed-in user in the named org | yes |
 | `check_permission` | Ask whether a given tool call would be allowed, require approval, or be blocked | yes (see note) |
-| `list_pending_approvals` | List approval requests still awaiting a human decision | yes |
+| `list_pending_approvals` | List approval requests made through this connection (the account or agent signed in) that are still waiting for a decision. Not requests waiting for you to approve | yes |
 | `check_approval_status` | Poll a pending approval request by its reference | yes |
+| `list_approvals_waiting_for_me` | List requests waiting for the signed-in person's decision as an approver | yes |
 
 ### Targeting the right organization
 
@@ -153,7 +155,7 @@ another system or could be risky or irreversible.
 
 ## Arguments on governed tools
 
-Customer-defined tools appear in `tools/list` alongside the four standard tools.
+Customer-defined tools appear in `tools/list` alongside the five standard tools.
 A direct tool accepts two optional arguments; an OakGuard gateway tool accepts its
 real downstream arguments plus the same oakallow fields:
 
@@ -212,10 +214,19 @@ Bad: "Do the thing", or pasting an API key or full request body into the reason.
 
 ## Checking on outstanding work
 
-- Use **`list_pending_approvals`** to show the user everything currently awaiting
-  a human decision, which is useful when resuming a session or when the user asks
-  "what is waiting on me?".
+- Use **`list_pending_approvals`** to show the requests you (or this account)
+  made that are still awaiting a human decision, which is useful when resuming a
+  session.
 - Use **`check_approval_status`** with a specific reference to poll one request.
+- When the user is an approver and asks "what is waiting for me to approve?", use
+  **`list_approvals_waiting_for_me`**. In chats that show oakallow cards, each request
+  appears with Approve and Deny buttons. Tell the user to press the button
+  themselves: it opens oakallow, where they confirm with a passkey or another
+  second factor. You cannot approve or deny for them, and you never receive the
+  links. If you are running as an agent identity, this tool returns nothing to
+  decide, because agents cannot decide approvals.
+- Replies may also appear as cards in chats that support MCP Apps. The reply
+  text is the same either way; read and act on the text.
 
 ## Rules of thumb
 

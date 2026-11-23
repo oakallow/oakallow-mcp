@@ -3,6 +3,36 @@
 All notable changes to the Oakallow MCP server listing are documented here. Versions
 match the `version` field in `server.json`.
 
+## 1.4.0
+
+- **Approval cards (MCP Apps).** In chats that support MCP Apps, oakallow replies also
+  appear as cards. Chats without card support show exactly the same text as before.
+  - **Status card** on a call sent for approval, a call still awaiting approval,
+    `check_approval_status` and `list_pending_approvals`: reference, tool, target,
+    status and who decided. No buttons.
+  - **Approver card** on the new `list_approvals_waiting_for_me` tool, with **Approve** and
+    **Deny** per request. A button opens the oakallow confirm page, where the approver
+    confirms with a passkey or another second factor, the same as the Slack, Discord
+    and Teams cards. A card never decides.
+  - Card data travels in the result's `_meta`, which MCP Apps hosts keep out of the
+    model's context. Reply text is unchanged, word for word.
+  - The card (`ui://oakallow/approval-card`) loads nothing from the network and calls
+    no tools.
+- **New standard tool `list_approvals_waiting_for_me`** (the fifth, seeded into every org like the other four). Read-only. Lists up to 25 requests in the
+  named org waiting at a level where you are an approver, and says when a request came
+  from an agent ("ci-production (agent)"). A request you made yourself is shown without
+  buttons when the org does not allow approving your own request. Agents get nothing to
+  decide.
+- **Clearer `list_pending_approvals`.** Its description and reply now say it lists
+  requests made through this connection (the account or agent signed in), not requests
+  waiting for you, and point to `list_approvals_waiting_for_me`. Same behavior.
+- **Approve and Deny links** are minted for one person only, work once, cover one level
+  of one exact request, and expire with the request or after 24 hours. Listing again
+  replaces earlier links. Links never appear in the reply text.
+- Every tool in `tools/list` carries `_meta.ui.resourceUri` pointing at the card.
+- `README.md` and `SKILL.md` document the cards and the new tool; `server.json` and
+  `tools.json` version 1.4.0.
+
 ## 1.3.0
 
 - **Resource, method and tenant on governed tools.** Customer-defined and gateway tools

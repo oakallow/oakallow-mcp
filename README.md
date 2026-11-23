@@ -28,7 +28,8 @@ The connector is a **requester and pass-through**, not a decider:
   every decision, and, for servers connected through the OakGuard gateway, forward a call
   once it is approved.
 - It cannot approve or deny on a human's behalf. Decisions happen on a separate,
-  MFA-bound surface (the dashboard), never over the connector.
+  MFA-bound surface (the oakallow app, the dashboard, or the oakallow confirm page that
+  approval cards open), never over the connector.
 
 ## Standard tools
 
@@ -36,8 +37,9 @@ The connector is a **requester and pass-through**, not a decider:
 |------|---------|:---:|
 | `list_my_tools` | Enumerate the tools available to the signed-in user in the named org (`org` arg; see below) | yes |
 | `check_permission` | Ask whether a given tool call would be allowed, require approval, or be blocked (takes an `org` arg; see below) | yes* |
-| `list_pending_approvals` | List approval requests still awaiting a human decision | yes |
+| `list_pending_approvals` | List approval requests made through this connection (the account or agent signed in) that are still waiting for a decision. Not requests waiting for you to approve | yes |
 | `check_approval_status` | Poll a pending approval request by reference number | yes |
+| `list_approvals_waiting_for_me` | List requests waiting for **your** decision as an approver (takes an `org` arg) | yes |
 
 \* `check_permission` returns a read-only verdict only. It does NOT create an approval or
 a reference. (The approval and its `REF-…` are created when you call the gated tool itself
@@ -46,13 +48,33 @@ makes Oakallow auto-create a gated draft entry for it (with conservative, fail-c
 defaults) so the eventual call is governed and the owner can triage it from the dashboard.
 This is intentional: an unknown tool is never silently trusted.
 
+## Approval cards (MCP Apps)
+
+In chats that support MCP Apps (for example VS Code Copilot Chat, Microsoft 365 Copilot
+Chat, Claude, ChatGPT and Cursor), oakallow replies also appear as cards. Chats without
+card support show the same text as before; nothing about the text changes.
+
+- **Status card.** When a call is sent for approval, is still awaiting approval, or you
+  check a request (`check_approval_status`, `list_pending_approvals`), the card shows the
+  reference, the tool, what it is for, the status and who decided. It never has buttons.
+- **Approver card.** `list_approvals_waiting_for_me` shows each request waiting for your
+  decision with **Approve** and **Deny**. A button never decides: it opens the oakallow
+  confirm page, where you confirm with a passkey or another second factor, exactly like
+  the Slack, Discord and Teams cards. That confirmation signs the decision.
+- Each button link works once, only for the person it was made for, and only for that
+  exact request and approval level. Listing again replaces earlier links.
+- Links are never in the reply text the model reads, and agents never receive them.
+  Agents cannot decide approvals.
+- The card loads nothing from the network and calls no tools. It is served by this
+  server as `ui://oakallow/approval-card`.
+
 ## Choosing an organization
 
 An Oakallow account can have more than one organization, and each org sets its own tools,
 permission rules, approvers, and alert paths. So an action must be checked against the
 **right** org, because that is what determines who gets asked to approve and under which rules.
 
-`check_permission` and `list_my_tools` accept an optional **`org`** argument: the org's
+`check_permission`, `list_my_tools` and `list_approvals_waiting_for_me` accept an optional **`org`** argument: the org's
 external id (e.g. `org_oak_…`). The rule:
 
 - **One org on your account:** omit `org`. The connector uses your only org.
@@ -71,7 +93,7 @@ convenience, not a grant of access.
 
 ## Calling a governed tool
 
-Alongside the four standard tools, `tools/list` returns the customer-defined tools your
+Alongside the standard tools, `tools/list` returns the customer-defined tools your
 org has approved. Calling one of those through oakallow is how an approval gets created:
 there is no separate "request approval" tool. A direct tool accepts these optional
 arguments, plus `org` as above:

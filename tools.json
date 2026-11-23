@@ -1,19 +1,19 @@
 {
-  "$comment": "Snapshot of the four standard tools exactly as tools/list returns them from https://api.oakallow.io/mcp. Customer-defined and OakGuard gateway tools are per-org and not listed here.",
+  "$comment": "Snapshot of the five standard tools exactly as tools/list returns them from https://api.oakallow.io/mcp. Customer-defined and OakGuard gateway tools are per-org and not listed here. Every tool carries _meta.ui.resourceUri, the MCP Apps approval card (ui://oakallow/approval-card).",
   "server": {
     "name": "oakallow",
-    "version": "1.3.0"
+    "version": "1.4.0"
   },
   "tools": [
     {
       "name": "list_my_tools",
-      "description": "Enumerate the customer-defined tools currently available to the signed-in user in the named org (or their only org if they have one). Returns tool names, descriptions, default permission, and risk level.",
+      "description": "Lists the approved (production) custom tools in the named org (or the account's only org). Tools in draft or testing are not included. Returns each tool's name, description, default permission and risk level.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "org": {
             "type": "string",
-            "description": "The oakallow organization external id (e.g. org_oak_…) this action targets. Required when your account has more than one org; optional if you have exactly one. Get it from the org-specific oakallow skill you downloaded for that org."
+            "description": "The oakallow organization external id (for example org_oak_…) the call targets. Required when the account has more than one org; optional when it has exactly one."
           }
         }
       },
@@ -23,11 +23,17 @@
         "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
+      },
+      "_meta": {
+        "ui": {
+          "resourceUri": "ui://oakallow/approval-card"
+        },
+        "ui/resourceUri": "ui://oakallow/approval-card"
       }
     },
     {
       "name": "check_permission",
-      "description": "Ask whether a given tool call would be allowed, require approval, or be blocked, without actually making the call. Returns the resolved permission verdict and the level it resolved from.",
+      "description": "Ask whether a given tool call would be allowed, require approval, or be blocked, without actually making the call. Returns the resolved permission verdict and the level it resolved from. Asking about a tool that isn't registered in the org records it there as a draft for an admin to review.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -37,7 +43,7 @@
           },
           "org": {
             "type": "string",
-            "description": "The oakallow organization external id (e.g. org_oak_…) this action targets. Required when your account has more than one org; optional if you have exactly one. Get it from the org-specific oakallow skill you downloaded for that org."
+            "description": "The oakallow organization external id (for example org_oak_…) the call targets. Required when the account has more than one org; optional when it has exactly one."
           },
           "resource_id": {
             "type": "string",
@@ -62,14 +68,25 @@
         "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
+      },
+      "_meta": {
+        "ui": {
+          "resourceUri": "ui://oakallow/approval-card"
+        },
+        "ui/resourceUri": "ui://oakallow/approval-card"
       }
     },
     {
       "name": "list_pending_approvals",
-      "description": "List approval requests still awaiting a human decision for the signed-in user. Useful for agents picking up an abandoned workflow.",
+      "description": "List approval requests made through this connection (the account or agent signed in here) that are still waiting for a decision, in the named org (or the only org). Requests made by other people or agents, such as a GitHub Actions agent, are not included. To see requests waiting for YOU to approve, use list_approvals_waiting_for_me.",
       "inputSchema": {
         "type": "object",
-        "properties": {}
+        "properties": {
+          "org": {
+            "type": "string",
+            "description": "The oakallow organization external id (for example org_oak_…) the call targets. Required when the account has more than one org; optional when it has exactly one."
+          }
+        }
       },
       "annotations": {
         "title": "List pending approvals",
@@ -77,11 +94,17 @@
         "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
+      },
+      "_meta": {
+        "ui": {
+          "resourceUri": "ui://oakallow/approval-card"
+        },
+        "ui/resourceUri": "ui://oakallow/approval-card"
       }
     },
     {
       "name": "check_approval_status",
-      "description": "Check the status of a pending approval request by REF number. Use this between retries of a tool call that is pending approval. Do NOT call the original tool again to check status; that will create a duplicate approval.",
+      "description": "Returns the status of an approval request by its REF number: pending, approved, denied, expired or cancelled. Covers your own requests and requests made by other members or agents in an org you can act on. Read-only; calling it never creates or changes a request.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -100,6 +123,38 @@
         "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false
+      },
+      "_meta": {
+        "ui": {
+          "resourceUri": "ui://oakallow/approval-card"
+        },
+        "ui/resourceUri": "ui://oakallow/approval-card"
+      }
+    },
+    {
+      "name": "list_approvals_waiting_for_me",
+      "description": "List approval requests in the named org (or your only org) that are waiting for YOUR decision as an approver. Read-only: it never approves or denies anything. A person decides in oakallow with a passkey or another second factor; in chats that show MCP Apps cards, each request appears with Approve and Deny buttons that open oakallow to confirm. Agents cannot decide approvals.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "org": {
+            "type": "string",
+            "description": "The oakallow organization external id (for example org_oak_…) the call targets. Required when the account has more than one org; optional when it has exactly one."
+          }
+        }
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "title": "List approvals waiting for me"
+      },
+      "_meta": {
+        "ui": {
+          "resourceUri": "ui://oakallow/approval-card"
+        },
+        "ui/resourceUri": "ui://oakallow/approval-card"
       }
     }
   ]
