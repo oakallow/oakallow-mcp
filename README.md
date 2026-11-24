@@ -208,7 +208,7 @@ interactive login is involved.
 
 An agent identity is scoped to one organization, can submit and check permission requests
 but never approve, is rate-limited per identity, and is stored only as a SHA-256 hash (the
-raw token is shown once at creation). Provision one from the dashboard's Account &rarr;
+raw token is shown once at creation). Provision one from the dashboard's Account >
 Agents page (owner/admin only). See [oakallow.io/info/agents](https://oakallow.io/info/agents)
 for the full model.
 
