@@ -2,7 +2,7 @@
   "$comment": "Snapshot of the five standard tools exactly as tools/list returns them from https://api.oakallow.io/mcp. Customer-defined and OakGuard gateway tools are per-org and not listed here. Every tool carries _meta.ui.resourceUri, the MCP Apps approval card (ui://oakallow/approval-card).",
   "server": {
     "name": "oakallow",
-    "version": "1.4.0"
+    "version": "1.4.1"
   },
   "tools": [
     {
