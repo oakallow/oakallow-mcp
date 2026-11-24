@@ -3,6 +3,24 @@
 All notable changes to the Oakallow MCP server listing are documented here. Versions
 match the `version` field in `server.json`.
 
+## 1.4.1
+
+- **Approval lists work without an org id.** `list_approvals_waiting_for_me` and
+  `list_pending_approvals` without `org` cover all of your orgs, start with a count per org,
+  and label each request with its org (up to 25 in all). Pass `org` to list one org, exactly
+  as before. A person asking "what is waiting for me?" in a chat has no org id to give, and
+  the question means all of their orgs. Approve and Deny still open the oakallow confirm
+  page for each request.
+- **`org` takes the org's name or its id** on every tool, for example `OakAsh-TEST`. A name
+  only matches orgs you can already act in; another team's org with the same name is never
+  matched. A name that matches two of your orgs is refused with their ids.
+- **"Which org?" instead of a dead end.** On an account with more than one org, a call that
+  needs one org and has none gets a reply naming your orgs (name and id), so you can answer
+  by name. Nothing is checked or created.
+- **Clearer tool choice.** `list_pending_approvals` now says it is for checking on requests
+  you made, and points a person asking what is pending or waiting for them to approve to
+  `list_approvals_waiting_for_me`. Description only.
+
 ## 1.4.0
 
 - **Approval cards (MCP Apps).** In chats that support MCP Apps, oakallow replies also

@@ -13,7 +13,7 @@
         "properties": {
           "org": {
             "type": "string",
-            "description": "The oakallow organization external id (for example org_oak_…) the call targets. Required when the account has more than one org; optional when it has exactly one."
+            "description": "The oakallow organization the call targets: its name, or its external id (for example org_oak_…). Required when the account has more than one org; optional when it has exactly one."
           }
         }
       },
@@ -43,7 +43,7 @@
           },
           "org": {
             "type": "string",
-            "description": "The oakallow organization external id (for example org_oak_…) the call targets. Required when the account has more than one org; optional when it has exactly one."
+            "description": "The oakallow organization the call targets: its name, or its external id (for example org_oak_…). Required when the account has more than one org; optional when it has exactly one."
           },
           "resource_id": {
             "type": "string",
@@ -78,13 +78,13 @@
     },
     {
       "name": "list_pending_approvals",
-      "description": "List approval requests made through this connection (the account or agent signed in here) that are still waiting for a decision, in the named org (or the only org). Requests made by other people or agents, such as a GitHub Actions agent, are not included. To see requests waiting for YOU to approve, use list_approvals_waiting_for_me.",
+      "description": "For agents and requesters checking on requests they made: lists approval requests made through this connection (the account or agent signed in here) that are still waiting for a decision, across all of your orgs, or only the named org. Requests made by other people or agents, such as a GitHub Actions agent, are not included. When a person asks what is pending or waiting for them to approve, use list_approvals_waiting_for_me instead.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "org": {
             "type": "string",
-            "description": "The oakallow organization external id (for example org_oak_…) the call targets. Required when the account has more than one org; optional when it has exactly one."
+            "description": "Optional. An oakallow organization name or external id (for example org_oak_…) to list only that org. Leave it out to list all of your orgs."
           }
         }
       },
@@ -133,13 +133,13 @@
     },
     {
       "name": "list_approvals_waiting_for_me",
-      "description": "List approval requests in the named org (or your only org) that are waiting for YOUR decision as an approver. Read-only: it never approves or denies anything. A person decides in oakallow with a passkey or another second factor; in chats that show MCP Apps cards, each request appears with Approve and Deny buttons that open oakallow to confirm. Agents cannot decide approvals.",
+      "description": "List approval requests waiting for YOUR decision as an approver: across all of your orgs, or only the named org. Read-only: it never approves or denies anything. A person decides in oakallow with a passkey or another second factor; in chats that show MCP Apps cards, each request appears with Approve and Deny buttons that open oakallow to confirm. Agents cannot decide approvals.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "org": {
             "type": "string",
-            "description": "The oakallow organization external id (for example org_oak_…) the call targets. Required when the account has more than one org; optional when it has exactly one."
+            "description": "Optional. An oakallow organization name or external id (for example org_oak_…) to list only that org. Leave it out to list all of your orgs."
           }
         }
       },

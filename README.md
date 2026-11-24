@@ -39,7 +39,7 @@ The connector is a **requester and pass-through**, not a decider:
 | `check_permission` | Ask whether a given tool call would be allowed, require approval, or be blocked (takes an `org` arg; see below) | yes* |
 | `list_pending_approvals` | List approval requests made through this connection (the account or agent signed in) that are still waiting for a decision. Not requests waiting for you to approve | yes |
 | `check_approval_status` | Poll a pending approval request by reference number | yes |
-| `list_approvals_waiting_for_me` | List requests waiting for **your** decision as an approver (takes an `org` arg) | yes |
+| `list_approvals_waiting_for_me` | List requests waiting for **your** decision as an approver, across all your orgs or one named `org` | yes |
 
 \* `check_permission` returns a read-only verdict only. It does NOT create an approval or
 a reference. (The approval and its `REF-…` are created when you call the gated tool itself
@@ -50,9 +50,10 @@ This is intentional: an unknown tool is never silently trusted.
 
 ## Approval cards (MCP Apps)
 
-In chats that support MCP Apps (for example VS Code Copilot Chat, Microsoft 365 Copilot
+In chats that support MCP Apps (for example Microsoft 365 Copilot Cowork, VS Code Copilot
 Chat, Claude, ChatGPT and Cursor), oakallow replies also appear as cards. Chats without
-card support show the same text as before; nothing about the text changes.
+card support show the same text as before; nothing about the text changes. Microsoft 365
+Copilot Chat shows the text (read-only); approve from a card in Cowork.
 
 - **Status card.** When a call is sent for approval, is still awaiting approval, or you
   check a request (`check_approval_status`, `list_pending_approvals`), the card shows the
@@ -74,17 +75,22 @@ An Oakallow account can have more than one organization, and each org sets its o
 permission rules, approvers, and alert paths. So an action must be checked against the
 **right** org, because that is what determines who gets asked to approve and under which rules.
 
-`check_permission`, `list_my_tools` and `list_approvals_waiting_for_me` accept an optional **`org`** argument: the org's
-external id (e.g. `org_oak_…`). The rule:
+Every org-scoped tool accepts an optional **`org`** argument: the org's **name** (for example
+`OakAsh-TEST`, any capitalization) or its external id (e.g. `org_oak_…`). The rule:
 
 - **One org on your account:** omit `org`. The connector uses your only org.
-- **More than one org:** pass `org` naming the org the action targets. If you omit it, the
-  call is refused with guidance rather than guessing the wrong org.
+- **More than one org:** pass `org` naming the org the action targets. If you omit it on
+  `check_permission`, `list_my_tools` or a governed tool, nothing is checked or created: the
+  reply asks which org and names your orgs (name and id), so you can answer by name.
+- **The two approval lists** (`list_approvals_waiting_for_me`, `list_pending_approvals`)
+  without `org` cover all of your orgs, starting with a count per org, because "what is
+  waiting?" has no single target. Pass `org` to see one org.
+- **A name that matches two of your orgs** is refused with their ids; it is never guessed.
 
-You don't ask the connector to list your orgs; there is no org-enumeration tool. Instead,
-**download the org-specific skill from that org's dashboard.** Each org's skill carries its
-own org id and tells the agent to pass it. Install one skill per org you operate in; the
-agent reads the matching skill and passes the right `org` on every call.
+The connector names only orgs you can already act in, and only to a person signed in with
+OAuth (agent tokens are tied to one org). There is no tool that lists other orgs. For agents,
+**download the org-specific skill from that org's dashboard**: it carries the org id and
+tells the agent to pass it on every call. Install one skill per org you operate in.
 
 The connector authorizes the `org` you pass against your signed-in identity: you can only
 target an org you can actually act in (you are its team owner/admin, or you are in that

@@ -2,13 +2,13 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.oakallow/oakallow",
   "title": "Oakallow",
-  "description": "Runtime permission, approval, and audit layer for AI agent tool execution.",
+  "description": "Permission checks, human approval cards, and signed audit trails for AI agent tool calls.",
   "websiteUrl": "https://oakallow.com",
   "repository": {
     "url": "https://github.com/oakallow/oakallow-mcp",
     "source": "github"
   },
-  "version": "1.4.0",
+  "version": "1.4.1",
   "remotes": [
     {
       "type": "streamable-http",
